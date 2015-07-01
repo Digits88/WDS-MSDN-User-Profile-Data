@@ -163,23 +163,7 @@ class MSDN_Profiles {
 
 		$puid = substr( $jwt->altsecid, strrpos( $jwt->altsecid, ':' ) + 1 );
 
-		// Try to find an existing user in WP with the PUID
-		// We need to do this with a normal SQL query, as get_users() seems to behave unexpectedly in an multisite environment
-		global $wpdb;
-
-		$query = "SELECT user.ID
-		FROM " . $wpdb->base_prefix . "users user
-		INNER JOIN  " . $wpdb->base_prefix . "usermeta meta ON meta.user_id = user.ID
-		WHERE meta.meta_key = '_user_puid'
-		AND meta.meta_value = '%s'
-		ORDER BY user.user_registered";
-
-		$user = '';
-
-		$user_id = $wpdb->get_results( $wpdb->prepare( $query, sanitize_text_field( $puid ) ), ARRAY_A );
-		if ( isset( $user_id[0] ) && isset( $user_id[0]['ID'] ) ) {
-			$user = get_user_by( 'id', $user_id[0]['ID'] );
-		}
+		$user = $this->get_user_by_puid( $puid );
 
 		// If we have a user, log them in
 		if ( ! empty( $user ) && is_a( $user, 'WP_User' ) ) {
@@ -191,6 +175,20 @@ class MSDN_Profiles {
 		}
 
 		return $override;
+	}
+
+	public function get_user_by_puid( $puid ) {
+		global $wpdb;
+		/*
+		 * We need to do this with a normal SQL query, as get_users()
+		 * seems to behave unexpectedly in a multisite environment
+		 */
+		$query = "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = '_user_puid' AND meta_value = %s";
+		$query = $wpdb->prepare( $query, sanitize_text_field( $puid ) );
+		$user_id = $wpdb->get_var( $query );
+		$user = $user_id ? get_user_by( 'id', $user_id ) : false;
+
+		return $user;
 	}
 
 	public function register_settings() {
