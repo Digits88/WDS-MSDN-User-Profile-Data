@@ -15,7 +15,7 @@ class MSDN_Profiles {
 	public function hooks() {
 		add_filter( 'aad_sso_found_user', array( $this, 'save_profile_data' ), 10, 2 );
 		add_filter( 'aad_sso_new_user', array( $this, 'save_profile_data' ), 10, 2 );
-		add_filter( 'aad_sso_new_user_override', array( $this, 'find_user_with_puid' ), 10, 3 );
+		add_filter( 'aad_sso_altsecid_user', array( $this, 'find_user_with_puid' ), 10, 2 );
 
 		add_filter( 'pre_site_option_registration', array( $this, 'can_user_register_new_blogs',  ) );
 
@@ -159,22 +159,20 @@ class MSDN_Profiles {
 		return true;
 	}
 
-	public function find_user_with_puid( $override, $userdata, $jwt ) {
-
-		$puid = substr( $jwt->altsecid, strrpos( $jwt->altsecid, ':' ) + 1 );
-
-		$user = $this->get_user_by_puid( $puid );
-
-		// If we have a user, log them in
-		if ( ! empty( $user ) && is_a( $user, 'WP_User' ) ) {
-
-			// update usermeta so we know who the user is next time
-			update_user_meta( $user->ID, '_aad_sso_altsecid', sanitize_text_field( $jwt->altsecid ) );
-
+	public function find_user_with_puid( $user, $aad_id ) {
+		if ( $user ) {
 			return $user;
 		}
 
-		return $override;
+		$puid = substr( $aad_id, strrpos( $aad_id, ':' ) + 1 );
+
+		// If we have a user, log them in
+		if ( $user = $this->get_user_by_puid( $puid ) ) {
+			// update usermeta so we know who the user is next time
+			update_user_meta( $user->ID, '_aad_sso_altsecid', sanitize_text_field( $aad_id ) );
+		}
+
+		return $user;
 	}
 
 	public function get_user_by_puid( $puid ) {
