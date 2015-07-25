@@ -30,6 +30,9 @@ class MSDN_Profiles {
 		add_action( 'show_user_profile', array( $this, 'show_avatar_on_edit_screen' ) );
 		add_action( 'edit_user_profile', array( $this, 'show_avatar_on_edit_screen' ) );
 
+		add_action( 'aad_sso_link_user_description', array( $this, 'link_user_description' ), 10, 2 );
+		add_action( 'aad_sso_link_user', array( $this, 'copy_profile_data' ), 10, 2 );
+
 	}
 
 	/**
@@ -190,18 +193,11 @@ class MSDN_Profiles {
 	}
 
 	public function register_settings() {
+
 		add_settings_field(
 			'profile_api_request_header',
 			__( 'Profile API Request Header token', 'msdn' ),
 			array( $this, 'render_profile_api_request_header' ),
-			'aad-settings',
-			'aad-directory-settings'
-		);
-
-		add_settings_field(
-			'affiliation',
-			__( 'Affiliation to check', 'msdn' ),
-			array( $this, 'render_affiliation' ),
 			'aad-settings',
 			'aad-directory-settings'
 		);
@@ -229,6 +225,15 @@ class MSDN_Profiles {
 			'aad-settings',
 			'aad-directory-settings'
 		);
+
+		add_settings_field(
+			'affiliation',
+			__( 'Profile affiliation to check', 'msdn' ),
+			array( $this, 'render_affiliation' ),
+			'aad-settings',
+			'aad-directory-settings'
+		);
+
 	}
 
 	public function render_profile_api_request_header() {
@@ -337,22 +342,79 @@ class MSDN_Profiles {
 
 	}
 
-	function show_avatar_on_edit_screen( $user ) { ?>
-		<?php if ( $avatar = get_the_author_meta( '_user_profile_avatar_base64', $user->ID ) ) { ?>
+	function show_avatar_on_edit_screen( $user ) {
+
+		$avatar = get_the_author_meta( '_user_profile_avatar_base64', $user->ID );
+		$profile_data = maybe_unserialize( get_user_meta( $user->ID, '_user_profile_data', true ) );
+		$url = $this->profile_base_uri();
+
+		$url .= $url && $profile_data && isset( $profile_data->DisplayName )
+			? 'profile/' . urlencode( $profile_data->DisplayName )
+			: '';
+
+		$avatar = $avatar ? '<img src="data:image/gif;base64,' . esc_html( $avatar ) . '" />': '';
+		$avatar = '<a href="' . esc_url( $url ) . '" target="_blank">' . $avatar . '<br>' . __( 'View your MSDN Profile', 'msdn' ) . '</a>';
+
+		?>
 		<table class="form-table">
-
 			<tr>
-				<th><label for="avatar"><?php _e( 'Avatar from MS Profile API', 'msdn' ); ?></label></th>
-
+				<th><label for="avatar"><?php _e( 'MSDN Profile', 'msdn' ); ?></label></th>
 				<td>
-				<?php
-				echo '<img src="data:image/gif;base64,' . $avatar . '" />'; ?>
+					<?php echo $avatar; ?>
 				</td>
 			</tr>
-
 		</table>
-		<?php }
+		<?php
 	}
+
+	public function link_user_description() {
+		if ( $url = $this->profile_base_uri() ) {
+			printf( '<p class="description">%s</p>', sprintf( __( '<strong>Note:</strong> this will replace your profile fields with information from your <a href="%s/profile" target="_blank">MSDN Profile</a>.', 'msdn' ), $url ) );
+		}
+	}
+
+	public function copy_profile_data( $user_to_link, $user_to_keep ) {
+
+		$fields_to_sync = array(
+			'_user_puid',
+			'_user_profile_data',
+			'_user_profile_id',
+			'nickname',
+			'_user_profile_avatar_base64',
+			'_aad_sso_altsecid',
+		);
+
+		// Loop profile meta fields and sync back to user that's being linked
+		foreach ( $fields_to_sync as $meta_key ) {
+			// Get the field
+			$value = get_user_meta( $user_to_link, $meta_key, 1 );
+			// and update the field on the user that's being linked
+			update_user_meta( $user_to_keep, $meta_key, $value );
+			// And dlete the user-meta on the user-to-remove
+			delete_user_meta( $user_to_link, $meta_key );
+
+			// if profile data...
+			if ( '_user_profile_data' == $meta_key ) {
+				$profile_data = maybe_unserialize( $value );
+
+				// Then let's update the display name for the user that's being linked
+				if ( $profile_data && isset( $profile_data->DisplayName ) ) {
+					wp_update_user( array(
+						'ID' => $user_to_keep,
+						'display_name' => sanitize_text_field( $profile_data->DisplayName ),
+					) );
+				}
+			}
+		}
+
+	}
+
+	public function profile_base_uri() {
+		$endpoint = $this->aad_settings( 'create_profile_endpoint' );
+		$parts = $endpoint ? parse_url( $endpoint ) : array();
+		return isset( $parts['scheme'], $parts['host'] ) ? trailingslashit( $parts['scheme'] . '://' . $parts['host'] ) : '';
+	}
+
 }
 
 $MSDN_Profiles = new MSDN_Profiles;
