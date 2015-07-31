@@ -271,9 +271,9 @@ class MSDN_Profiles {
 		echo '<input type="text" id="create_profile_endpoint" name="aad-settings[create_profile_endpoint]" value="' . esc_attr( $this->aad_settings( 'create_profile_endpoint' ) ) . '" class="widefat" />';
 	}
 
-	public function aad_settings( $setting = '' ) {
+	public function aad_settings( $setting = '', $default = null ) {
 		static $settings = null;
-		$settings = is_null( $settings ) ? AADSSO_Settings::load_settings()->settings : $settings;
+		$settings = is_null( $settings ) ? AADSSO_Settings::get_instance()->settings : $settings;
 
 		if ( $setting ) {
 
@@ -292,7 +292,7 @@ class MSDN_Profiles {
 					return 'https://social.msdn.microsoft.com/Profile/u/create';
 
 				default:
-					return null;
+					return $default;
 			}
 
 		}
