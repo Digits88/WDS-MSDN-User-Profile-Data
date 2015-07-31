@@ -150,10 +150,22 @@ class MSDN_Profiles {
 			update_user_meta( $user_id, 'nickname', sanitize_text_field( $profile_json->DisplayName ) );
 		}
 
-		wp_update_user( array(
+		$update_args = array(
 			'ID' => $user_id,
 			'display_name' => sanitize_text_field( $profile_json->DisplayName ),
-		) );
+		);
+
+		// For testing
+		// $profile_json->Affiliations = array( esc_attr( $this->aad_settings( 'affiliation' ) ) );
+
+		if (
+			( $role = $this->aad_settings( 'affiliation_wp_role' ) )
+			&& $this->has_affiliation( $profile_json )
+		) {
+			$update_args['role'] = esc_attr( $role );
+		}
+
+		wp_update_user( $update_args );
 
 		// Get the avatar endpoint url by concatenating the values from the profile blob
 		if ( ! isset( $profile_json->DisplayName, $profile_json->AvatarVersion ) ) {
@@ -248,6 +260,14 @@ class MSDN_Profiles {
 			'aad-directory-settings'
 		);
 
+		add_settings_field(
+			'affiliation_wp_role',
+			__( 'Affiliation Role' ),
+			array( $this, 'render_affiliation_wp_role' ),
+			'aad-settings',
+			'aad-directory-settings'
+		);
+
 	}
 
 	public function render_profile_api_request_header() {
@@ -257,6 +277,14 @@ class MSDN_Profiles {
 	public function render_affiliation() {
 		echo '<input type="text" id="affiliation" name="aad-settings[affiliation]" value="' . esc_attr( $this->aad_settings( 'affiliation' ) ) . '" class="widefat" />';
 		do_action( 'wds_msdn_affiliation_description', $this );
+	}
+
+	public function render_affiliation_wp_role() {
+		echo '<select style="min-width: 200px;" name="aad-settings[affiliation_wp_role]" id="new_role">';
+		echo '<option value="">No Role</option>';
+		wp_dropdown_roles( $this->affiliation_wp_role() );
+		echo '</select>';
+		echo '<p class="description">' . __( 'Role for user if affiliation is met', 'wds_msdn' ) . '</p>';
 	}
 
 	public function render_profile_api_endpoint() {
