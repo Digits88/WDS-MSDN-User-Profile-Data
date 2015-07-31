@@ -9,10 +9,24 @@ Version: 1.0.0
 Author URI: http://webdevstudios.com
 */
 
-
 class MSDN_Profiles {
 
-	public function hooks() {
+	protected static $single_instance = null;
+
+	/**
+	 * Creates or returns an instance of this class.
+	 * @since  0.1.0
+	 * @return MSDN_Profiles A single instance of this class.
+	 */
+	public static function get_instance() {
+		if ( null === self::$single_instance ) {
+			self::$single_instance = new self();
+		}
+
+		return self::$single_instance;
+	}
+
+	protected function __construct() {
 		add_filter( 'aad_sso_found_user', array( $this, 'save_profile_data' ), 10, 2 );
 		add_filter( 'aad_sso_new_user', array( $this, 'save_profile_data' ), 10, 2 );
 		add_filter( 'aad_sso_altsecid_user', array( $this, 'find_user_with_puid' ), 10, 2 );
@@ -417,5 +431,4 @@ class MSDN_Profiles {
 
 }
 
-$MSDN_Profiles = new MSDN_Profiles;
-$MSDN_Profiles->hooks();
+MSDN_Profiles::get_instance();
