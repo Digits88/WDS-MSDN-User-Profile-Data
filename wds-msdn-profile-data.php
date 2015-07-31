@@ -299,6 +299,38 @@ class MSDN_Profiles {
 		echo '<input type="text" id="create_profile_endpoint" name="aad-settings[create_profile_endpoint]" value="' . esc_attr( $this->aad_settings( 'create_profile_endpoint' ) ) . '" class="widefat" />';
 	}
 
+	public function affiliation_wp_role() {
+		return $this->aad_settings( 'affiliation_wp_role', $this->aad_settings( 'default_wp_role', AADSSO_Settings::get_instance()->default_wp_role ) );
+	}
+
+	public function has_affiliation( $profile_data_or_user_id = null ) {
+
+		$profile = $profile_data_or_user_id;
+
+		if ( is_null( $profile_data_or_user_id ) || ! isset( $profile->Affiliations ) ) {
+
+			$user_id = is_numeric( $profile ) ? absint( $profile ) : get_current_user_id();
+
+			$profile = get_user_meta( $user_id, '_user_profile_data', true );
+
+		}
+
+		if ( ! $profile || ! isset( $profile->Affiliations ) || ! $profile->Affiliations ) {
+			return false;
+		}
+
+		$affiliation = esc_attr( $this->aad_settings( 'affiliation' ) );
+
+		// Probably NEVER going to be a string
+		if ( is_string( $profile->Affiliations ) && false !== strpos( $affiliation, $profile->Affiliations ) ) {
+			return true;
+		}
+
+		// Probably ALWAYS going to be an array
+		return is_array( $profile->Affiliations ) && in_array( $affiliation, $profile->Affiliations, true );
+	}
+
+
 	public function aad_settings( $setting = '', $default = null ) {
 		static $settings = null;
 		$settings = is_null( $settings ) ? AADSSO_Settings::get_instance()->settings : $settings;
