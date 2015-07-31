@@ -130,8 +130,12 @@ class MSDN_Profiles {
 				return new WP_Error( 'bad_response_from_endpoint', "Bad response from endpoint: $profile_endpoint", isset( $profile['response']['code'] ) ? $profile['response']['code'] : '' );
 			}
 
-			// no profile? it's required, so redirect them to create one
-			return $this->redirect_user_to_profile_creation( $puid );
+			if ( $require_profile_creation = apply_filters( 'wds_msdn_require_profile_creation', true, $this ) ) {
+				// no profile? it's required, so redirect them to create one
+				return $this->redirect_user_to_profile_creation( $puid );
+			}
+
+			return false;
 		}
 
 		$profile_json = json_decode( $profile['body'] );
