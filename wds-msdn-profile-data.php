@@ -31,10 +31,6 @@ class MSDN_Profiles {
 		add_filter( 'aad_sso_new_user', array( $this, 'save_profile_data' ), 10, 2 );
 		add_filter( 'aad_sso_altsecid_user', array( $this, 'find_user_with_puid' ), 10, 2 );
 
-		add_filter( 'pre_site_option_registration', array( $this, 'can_user_register_new_blogs',  ) );
-
-		add_action( 'admin_bar_menu', array( $this, 'maybe_add_create_blog_menu_item' ), 999 );
-
 		add_filter( 'login_form_logout', array( $this, 'logout_if_profile_creation_fail' ), 99 );
 
 		if ( is_admin() ) {
@@ -256,7 +252,7 @@ class MSDN_Profiles {
 
 	public function render_affiliation() {
 		echo '<input type="text" id="affiliation" name="aad-settings[affiliation]" value="' . esc_attr( $this->aad_settings( 'affiliation' ) ) . '" class="widefat" />';
-		echo '<p>' . __( 'Affiliation determines if user is allowed to create blogs.', 'domain' ) . '</p>';
+		do_action( 'wds_msdn_affiliation_description', $this );
 	}
 
 	public function render_profile_api_endpoint() {
@@ -298,62 +294,6 @@ class MSDN_Profiles {
 		}
 
 		return $settings;
-	}
-
-	public function can_user_register_new_blogs( $value = '' ) {
-
-		// If a user is a super admin, we want them to always be able to create a blog
-		if ( is_multisite() && is_super_admin( get_current_user_id() ) ) {
-			return 'blog';
-		}
-
-		// if the user doesn't have profile data, don't bother checking it
-		$profile_data = get_user_meta( get_current_user_id(), '_user_profile_data', true );
-		if ( ! $profile_data ) {
-			return 'none';
-		}
-
-		// If a user doesn't have the Affliations profile field, they won't be from MS
-		if ( ! isset( $profile_data->Affiliations ) || ! $profile_data->Affiliations ) {
-			return 'none';
-		}
-
-		// If a user is from our set affiliation, allow them to register a blog
-		$affiliation_to_check = esc_attr( $this->aad_settings( 'affiliation' ) );
-
-		// Probably NEVER going to be a string
-		if ( is_string( $profile_data->Affiliations ) && false !== strpos( $affiliation_to_check, $profile_data->Affiliations ) ) {
-			return 'blog';
-		}
-
-		// Probably ALWAYS going to be an array
-		if ( is_array( $profile_data->Affiliations ) && in_array( $affiliation_to_check, $profile_data->Affiliations, true ) ) {
-			return 'blog';
-		}
-
-		return 'none';
-	}
-
-
-	/**
-	 * Add 'Create a blog' menu item when applicable
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param object $wp_admin_bar
-	 */
-	function maybe_add_create_blog_menu_item( $wp_admin_bar ) {
-
-		// If network admin or MSFT affiliated user, allow blog creation.
-		if ( current_user_can( 'manage_network' ) || 'blog' == $this->can_user_register_new_blogs() ) {
-			$wp_admin_bar->add_menu( array(
-				'parent' => 'site-name',
-				'id'     => 'msdn-create-sites',
-				'title'  => __( 'Create a Blog' ),
-				'href'   => trailingslashit( esc_url( $_SERVER['SERVER_NAME'] ) ) . 'wp-signup.php',
-			) );
-		}
-
 	}
 
 	function show_avatar_on_edit_screen( $user ) {
