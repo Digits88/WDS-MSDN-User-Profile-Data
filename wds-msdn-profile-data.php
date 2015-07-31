@@ -210,7 +210,7 @@ class MSDN_Profiles {
 
 		add_settings_field(
 			'profile_api_request_header',
-			__( 'Profile API Request Header token', 'msdn' ),
+			__( 'Profile API Request Header token', 'wds_msdn' ),
 			array( $this, 'render_profile_api_request_header' ),
 			'aad-settings',
 			'aad-directory-settings'
@@ -218,7 +218,7 @@ class MSDN_Profiles {
 
 		add_settings_field(
 			'profile_api_endpoint',
-			__( 'Profile API Endpoint', 'msdn' ),
+			__( 'Profile API Endpoint', 'wds_msdn' ),
 			array( $this, 'render_profile_api_endpoint' ),
 			'aad-settings',
 			'aad-directory-settings'
@@ -226,7 +226,7 @@ class MSDN_Profiles {
 
 		add_settings_field(
 			'profile_avatar_api_endpoint',
-			__( 'Profile Avatar API Endpoint', 'msdn' ),
+			__( 'Profile Avatar API Endpoint', 'wds_msdn' ),
 			array( $this, 'render_profile_avatar_api_endpoint' ),
 			'aad-settings',
 			'aad-directory-settings'
@@ -234,7 +234,7 @@ class MSDN_Profiles {
 
 		add_settings_field(
 			'create_profile_endpoint',
-			__( 'Profile-Create URL', 'msdn' ),
+			__( 'Profile-Create URL', 'wds_msdn' ),
 			array( $this, 'render_create_profile_endpoint' ),
 			'aad-settings',
 			'aad-directory-settings'
@@ -242,7 +242,7 @@ class MSDN_Profiles {
 
 		add_settings_field(
 			'affiliation',
-			__( 'Profile affiliation to check', 'msdn' ),
+			__( 'Profile affiliation to check', 'wds_msdn' ),
 			array( $this, 'render_affiliation' ),
 			'aad-settings',
 			'aad-directory-settings'
@@ -311,12 +311,12 @@ class MSDN_Profiles {
 			: '';
 
 		$avatar = $avatar ? '<img src="data:image/gif;base64,' . esc_html( $avatar ) . '" />': '';
-		$avatar = '<a href="' . esc_url( $url ) . '" target="_blank">' . $avatar . '<br>' . __( 'View your MSDN Profile', 'msdn' ) . '</a>';
+		$avatar = '<a href="' . esc_url( $url ) . '" target="_blank">' . $avatar . '<br>' . __( 'View your MSDN Profile', 'wds_msdn' ) . '</a>';
 
 		?>
 		<table class="form-table">
 			<tr>
-				<th><label for="avatar"><?php _e( 'MSDN Profile', 'msdn' ); ?></label></th>
+				<th><label for="avatar"><?php _e( 'MSDN Profile', 'wds_msdn' ); ?></label></th>
 				<td>
 					<?php echo $avatar; ?>
 				</td>
@@ -327,7 +327,7 @@ class MSDN_Profiles {
 
 	public function link_user_description() {
 		if ( $url = $this->profile_base_uri() ) {
-			printf( '<p class="description">%s</p>', sprintf( __( '<strong>Note:</strong> this will replace your profile fields with information from your <a href="%s/profile" target="_blank">MSDN Profile</a>.', 'msdn' ), $url ) );
+			printf( '<p class="description">%s</p>', sprintf( __( '<strong>Note:</strong> this will replace your profile fields with information from your <a href="%s/profile" target="_blank">MSDN Profile</a>.', 'wds_msdn' ), $url ) );
 		}
 	}
 
