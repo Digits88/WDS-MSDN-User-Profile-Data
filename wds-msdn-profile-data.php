@@ -97,6 +97,9 @@ class MSDN_Profiles {
 	}
 
 	public function save_profile_data( $user, $jwt ) {
+		if ( ! isset( $user->ID ) ) {
+			return $user;
+		}
 		// Save the puid so we can reference easily in other places
 		$puid = substr( $jwt->altsecid, strrpos( $jwt->altsecid, ':' ) + 1 );
 		if ( ! $puid ) {
