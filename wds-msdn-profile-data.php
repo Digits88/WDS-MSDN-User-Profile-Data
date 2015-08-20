@@ -374,6 +374,11 @@ class MSDN_Profiles {
 
 		$avatar = get_the_author_meta( '_user_profile_avatar_base64', $user->ID );
 		$profile_data = maybe_unserialize( get_user_meta( $user->ID, '_user_profile_data', true ) );
+
+		if ( empty( $profile_data ) ) {
+			return;
+		}
+
 		$url = $this->profile_base_uri();
 
 		$url .= $url && $profile_data && isset( $profile_data->DisplayName )
