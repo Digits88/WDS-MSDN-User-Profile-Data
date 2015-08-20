@@ -12,6 +12,7 @@ Author URI: http://webdevstudios.com
 class MSDN_Profiles {
 
 	protected static $single_instance = null;
+	protected $is_new_user = false;
 
 	/**
 	 * Creates or returns an instance of this class.
@@ -28,7 +29,7 @@ class MSDN_Profiles {
 
 	protected function __construct() {
 		add_filter( 'aad_sso_found_user', array( $this, 'save_profile_data' ), 10, 2 );
-		add_filter( 'aad_sso_new_user', array( $this, 'save_profile_data' ), 10, 2 );
+		add_filter( 'aad_sso_new_user', array( $this, 'new_user_save_profile_data' ), 10, 2 );
 		add_filter( 'aad_sso_altsecid_user', array( $this, 'find_user_with_puid' ), 10, 2 );
 
 		add_filter( 'login_form_logout', array( $this, 'logout_if_profile_creation_fail' ), 99 );
@@ -94,6 +95,11 @@ class MSDN_Profiles {
 		// Send them there
 		wp_redirect( esc_url_raw( $url ) );
 		exit;
+	}
+
+	public function new_user_save_profile_data( $user, $jwt ) {
+		$this->is_new_user = true;
+		$this->save_profile_data( $user, $jwt );
 	}
 
 	public function save_profile_data( $user, $jwt ) {
@@ -162,7 +168,8 @@ class MSDN_Profiles {
 		// $profile_json->Affiliations = array( esc_attr( $this->aad_settings( 'affiliation' ) ) );
 
 		if (
-			( $role = $this->aad_settings( 'affiliation_wp_role' ) )
+			$this->is_new_user
+			&& ( $role = $this->aad_settings( 'affiliation_wp_role' ) )
 			&& $this->has_affiliation( $profile_json )
 		) {
 			$update_args['role'] = esc_attr( $role );
