@@ -99,7 +99,7 @@ class MSDN_Profiles {
 
 	public function new_user_save_profile_data( $user, $jwt ) {
 		$this->is_new_user = true;
-		$this->save_profile_data( $user, $jwt );
+		return $this->save_profile_data( $user, $jwt );
 	}
 
 	public function save_profile_data( $user, $jwt ) {
