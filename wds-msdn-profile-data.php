@@ -42,7 +42,7 @@ class MSDN_Profiles {
 		add_action( 'edit_user_profile', array( $this, 'show_avatar_on_edit_screen' ) );
 
 		add_action( 'aad_sso_link_user_description', array( $this, 'link_user_description' ), 10, 2 );
-		add_action( 'aad_sso_link_user', array( $this, 'copy_profile_data' ), 10, 2 );
+		add_action( 'aad_sso_link_users', array( $this, 'copy_profile_data' ), 10, 2 );
 
 	}
 
@@ -423,7 +423,7 @@ class MSDN_Profiles {
 			$value = get_user_meta( $user_to_link, $meta_key, 1 );
 			// and update the field on the user that's being linked
 			update_user_meta( $user_to_keep, $meta_key, $value );
-			// And dlete the user-meta on the user-to-remove
+			// And delete the user-meta on the user-to-remove
 			delete_user_meta( $user_to_link, $meta_key );
 
 			// if profile data...
